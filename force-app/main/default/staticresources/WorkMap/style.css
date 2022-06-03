@@ -1,0 +1,75 @@
+:root {
+	--border-radius: 2px;
+	--box-shadow: 0 1px 4px -2px;
+	--color-grey: #565656;
+	--color-grey_light: #ebebeb;
+	--color-white: #ffffff;
+}
+
+body,
+html {
+	height: 100%;
+	margin: 0;
+	padding: 0;
+}
+
+#map {
+	height: 100%;
+}
+
+section {
+	background-color: var(--color-white);
+	border-radius: var(--border-radius);
+	box-shadow: var(--box-shadow);
+	font-size: 1rem;
+	margin: 10px;
+}
+
+section > label {
+	color: var(--color-grey);
+	display: block;
+	font-size: 18px;
+	padding: 10px;
+}
+
+.slds-checkbox__label,
+.slds-radio__label {
+	cursor: pointer;
+}
+
+.slds-item {
+	cursor: pointer;
+}
+
+.slds-item:hover {
+	background-color: var(--color-grey_light);
+}
+
+.clickable:hover {
+	background-color: var(--color-grey_light);
+	cursor: pointer;
+}
+
+/* slds overrides */
+
+.slds-tabs_default {
+	width: auto !important;
+}
+
+/* google overrides */
+
+.gm-style-iw.gm-style-iw-c table th {
+  padding-right: 10px;
+  text-align: right;
+}
+
+.gm-style-iw.gm-style-iw-c table td {
+  text-align: left;
+}
+
+.gm-style-iw.gm-style-iw-c a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 8px;
+}

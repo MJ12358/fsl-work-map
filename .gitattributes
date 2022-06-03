@@ -1,0 +1,21 @@
+# Set the default line return behavior, in case people don't have core.autocrlf set.
+#* text=auto eol=lf
+
+# Common git file types
+.gitattributes linguist-language=Text
+.gitignore linguist-language=Text
+*.md linguist-language=Text
+*.json linguist-language=JSON
+
+# Salesforce-specfic file types
+*.app linguist-language=HTML
+*.cls linguist-language=Apex
+*.cmp linguist-language=HTML
+*.component linguist-language=HTML
+*.design linguist-language=HTML
+*.evt linguist-language=HTML
+*.page linguist-language=HTML
+*.resource linguist-language=Text
+*.trigger linguist-language=Apex
+
+## Specific Salesforce static resources that should be treated like text

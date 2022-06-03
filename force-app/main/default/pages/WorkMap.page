@@ -1,0 +1,304 @@
+<apex:page docType="html-5.0" controller="WorkMapController" sidebar="false" showHeader="false" showChat="false" standardStylesheets="false"
+ applyHtmlTag="false" applyBodyTag="false" showQuickActionVfHeader="false" readOnly="true">
+
+ <html dir="ltr" lng="en" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+		<meta name="robots" content="noindex, nofollow, noodp, noarchive, nosnippet, noimageindex" />
+		<meta http-equiv="Content-Security-Policy" content="default-src 'self';font-src 'self' *.gstatic.com;frame-src 'self';img-src 'self' data: *.gstatic.com *.googleapis.com maps.google.com;style-src 'self' 'unsafe-inline' *.googleapis.com;script-src 'self' 'unsafe-inline' 'unsafe-eval' *.googleapis.com;connect-src *.googleapis.com *.force.com *.visualforce.com" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+		<meta name="msapplication-TileColor" content="#1b3668" />
+		<meta name="theme-color" content="#ffffff" />
+		<title>Work Map</title>
+		<link rel="icon" sizes="32x32" href="{!URLFOR($Resource.WorkMap, 'assets/favicon_32x32.png')}" />
+		<link rel="icon" sizes="16x16" href="{!URLFOR($Resource.WorkMap, 'assets/favicon_16x16.png')}" />
+		<link rel="stylesheet" type="text/css" href="{!URLFOR($Resource.WorkMap, 'style.min.css')}" />
+		<apex:slds />
+	</head>
+
+	<body class="slds-scope">
+
+		<main id="map"></main>
+
+		<!-- hide controls until they are moved into the map -->
+		<div style="display: none;">
+
+			<section id="options">
+				<div class="slds-grid">
+					<div rv-on-click="toggleOptionControl" class="slds-p-around_small clickable">
+						<span>Map Options</span>
+						<span class="slds-icon_container">
+							<svg class="slds-icon slds-icon_x-small slds-icon-text-default" aria-hidden="true">
+								<use rv-hide="optionControlOpen" xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Asset.SLDS, 'assets/icons/utility-sprite/svg/symbols.svg#down')}"></use>
+								<use rv-show="optionControlOpen" xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Asset.SLDS, 'assets/icons/utility-sprite/svg/symbols.svg#up')}"></use>
+							</svg>
+						</span>
+					</div>
+				</div>
+			</section>
+
+			<section id="option-control" rv-show="optionControlOpen" class="slds-tabs_default">
+				<ul class="slds-tabs_default__nav slds-text-title_caps" role="tablist">
+					<li rv-class-slds-is-active="currentTab | == 'tab-1'" class="slds-tabs_default__item" role="presentation">
+						<a rv-on-click="openTab" class="slds-tabs_default__link" role="tab" aria-controls="tab-1">Markers</a>
+					</li>
+					<li rv-class-slds-is-active="currentTab | == 'tab-2'"  class="slds-tabs_default__item" role="presentation">
+						<a rv-on-click="openTab" class="slds-tabs_default__link" role="tab" aria-controls="tab-2">Statuses</a>
+					</li>
+					<li rv-class-slds-is-active="currentTab | == 'tab-3'"  class="slds-tabs_default__item" role="presentation">
+						<a rv-on-click="openTab" class="slds-tabs_default__link" role="tab" aria-controls="tab-3">Layers</a>
+					</li>
+					<li rv-class-slds-is-active="currentTab | == 'tab-4'"  class="slds-tabs_default__item" role="presentation">
+						<a rv-on-click="openTab" class="slds-tabs_default__link" role="tab" aria-controls="tab-4">Style</a>
+					</li>
+				</ul>
+
+				<!-- tab 1 -->
+				<div id="tab-1" rv-show="currentTab | == 'tab-1'" class="slds-tabs_default__content slds-p-horizontal_small" role="tabpanel">
+					<div class="slds-form-element">
+						<div class="slds-form-element__control">
+
+							<div class="slds-checkbox slds-p-bottom_xx-small">
+								<input id="checkbox-1" type="checkbox" rv-on-click="togglePointsOfInterest" />
+								<label for="checkbox-1" class="slds-checkbox__label">
+									<span class="slds-checkbox_faux"></span>
+									<span class="slds-form-element__label">Points of Interest</span>
+								</label>
+							</div>
+
+              <div class="slds-checkbox slds-p-bottom_xx-small">
+								<input id="checkbox-2" type="checkbox" rv-on-click="toggleLocations" />
+								<label for="checkbox-2" class="slds-checkbox__label">
+									<span class="slds-checkbox_faux"></span>
+									<span class="slds-form-element__label">Locations</span>
+								</label>
+							</div>
+
+							<div class="slds-checkbox slds-p-bottom_xx-small">
+								<input id="checkbox-3" type="checkbox" rv-on-click="toggleResources" checked="checked" />
+								<label for="checkbox-3" class="slds-checkbox__label">
+									<span class="slds-checkbox_faux"></span>
+									<span class="slds-form-element__label">Service Resources</span>
+								</label>
+							</div>
+
+							<div class="slds-checkbox slds-p-bottom_xx-small">
+								<input id="checkbox-4" type="checkbox" rv-on-click="toggleTerritories" checked="checked" />
+								<label for="checkbox-4" class="slds-checkbox__label">
+									<span class="slds-checkbox_faux"></span>
+									<span class="slds-form-element__label">Service Territories</span>
+								</label>
+							</div>
+
+              <div id="appointment-inputs" class="slds-border_top slds-m-vertical_xx-small slds-p-top_xx-small">
+                <div class="slds-checkbox slds-p-bottom_xx-small">
+                  <input id="checkbox-5" type="checkbox" rv-on-click="toggleAppointments" checked="checked" />
+                  <label for="checkbox-5" class="slds-checkbox__label">
+                    <span class="slds-checkbox_faux"></span>
+                    <span class="slds-form-element__label">Service Appointments</span>
+                  </label>
+                </div>
+                <div class="slds-checkbox slds-p-bottom_xx-small">
+                  <input id="checkbox-6" type="checkbox" rv-on-click="toggleMyAppointments" />
+                  <label for="checkbox-6" class="slds-checkbox__label">
+                    <span class="slds-checkbox_faux"></span>
+                    <span class="slds-form-element__label">My Appointments Only</span>
+                  </label>
+                </div>
+              </div>
+
+              <div id="workorder-inputs" class="slds-border_top slds-m-vertical_xx-small slds-p-top_xx-small">
+                <div class="slds-checkbox slds-p-bottom_xx-small">
+                  <input id="checkbox-7" type="checkbox" rv-on-click="toggleWorkOrders" />
+                  <label for="checkbox-7" class="slds-checkbox__label">
+                    <span class="slds-checkbox_faux"></span>
+                    <span class="slds-form-element__label">Work Orders</span>
+                  </label>
+                </div>
+                <div class="slds-checkbox slds-p-bottom_xx-small">
+                  <input id="checkbox-8" type="checkbox" rv-on-click="toggleMyWorkOrders" />
+                  <label for="checkbox-8" class="slds-checkbox__label">
+                    <span class="slds-checkbox_faux"></span>
+                    <span class="slds-form-element__label">My Work Orders Only</span>
+                  </label>
+                </div>
+              </div>
+
+						</div>
+					</div>
+				</div>
+
+				<!-- tab 2 -->
+				<div id="tab-2" rv-show="currentTab | == 'tab-2'" class="slds-tabs_default__content slds-p-horizontal_small" role="tabpanel">
+					<div class="slds-form-element">
+						<div class="slds-form-element__control">
+							<div id="statusboxes" rv-each-status="statuses" class="slds-checkbox slds-p-bottom_xx-small">
+								<input
+									rv-id="%status% | prepend 'status-'"
+                  rv-on-click="toggleStatus | args status"
+									type="checkbox"
+									checked="true" />
+								<label rv-for="%status% | prepend 'status-'" class="slds-checkbox__label">
+									<span class="slds-checkbox_faux"></span>
+									<span class="slds-form-element__label">{ status }</span>
+								</label>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- tab 3 -->
+				<div id="tab-3" rv-show="currentTab | == 'tab-3'" class="slds-tabs_default__content slds-p-horizontal_small" role="tabpanel">
+					<div class="slds-form-element">
+						<div class="slds-form-element__control">
+
+							<div class="slds-checkbox slds-p-bottom_xx-small">
+								<input id="drawing" type="checkbox" rv-on-click="toggleDrawing" />
+								<label for="drawing" class="slds-checkbox__label">
+									<span class="slds-checkbox_faux"></span>
+									<span class="slds-form-element__label">Drawing</span>
+								</label>
+							</div>
+
+							<div class="slds-checkbox slds-p-bottom_xx-small">
+								<input id="heatmap" type="checkbox" rv-on-click="toggleHeatmap" />
+								<label for="heatmap" class="slds-checkbox__label">
+									<span class="slds-checkbox_faux"></span>
+									<span class="slds-form-element__label">Heatmap</span>
+								</label>
+							</div>
+
+							<div class="slds-checkbox slds-p-bottom_xx-small">
+								<input id="polygon" type="checkbox" rv-on-click="togglePolygons" />
+								<label for="polygon" class="slds-checkbox__label">
+									<span class="slds-checkbox_faux"></span>
+									<span class="slds-form-element__label">Polygons</span>
+								</label>
+							</div>
+
+							<div class="slds-checkbox slds-p-bottom_xx-small">
+								<input id="traffic" type="checkbox" rv-on-click="toggleTraffic" />
+								<label for="traffic" class="slds-checkbox__label">
+									<span class="slds-checkbox_faux"></span>
+									<span class="slds-form-element__label">Traffic</span>
+								</label>
+							</div>
+
+						</div>
+					</div>
+					<div rv-show="polygons | none null 'map'" class="slds-border_top slds-m-top_x-small slds-scrollable_y" style="max-height:50vh;">
+						<ul class="slds-has-dividers_bottom-space slds-p-vertical_x-small">
+							<li
+								rv-each-polygon="polygons"
+								rv-style-border="polygon.fillColor"
+								rv-on-click="togglePolygon | args polygon"
+								class="slds-item slds-text-body_small">
+								<span class="slds-icon_container slds-icon-utility-preview">
+									<svg class="slds-icon slds-icon_xx-small slds-icon-text-default" aria-hidden="true">
+										<use rv-show="polygon.visible" xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Asset.SLDS, 'assets/icons/utility-sprite/svg/symbols.svg#preview')}"></use>
+										<use rv-hide="polygon.visible" xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Asset.SLDS, 'assets/icons/utility-sprite/svg/symbols.svg#hide')}"></use>
+									</svg>
+								</span>
+								<span class="slds-p-left_small">{ polygon.title }</span>
+							</li>
+						</ul>
+					</div>
+				</div>
+
+				<!-- tab 4 -->
+				<div id="tab-4" rv-show="currentTab | == 'tab-4'" class="slds-tabs_default__content slds-p-horizontal_small" role="tabpanel">
+					<fieldset class="slds-form-element">
+						<div class="slds-form-element__control">
+							<span rv-each-style="styles | keys" class="slds-radio slds-p-bottom_xx-small">
+								<input rv-id="%style% | prepend 'radio-'" rv-on-change="changeStyle" rv-value="style" type="radio" name="styles" rv-checked="selectedStyle" />
+								<label class="slds-radio__label" rv-for="%style% | prepend 'radio-'">
+									<span class="slds-radio_faux"></span>
+									<span class="slds-form-element__label">{ style | capitalize }</span>
+								</label>
+							</span>
+						</div>
+					</fieldset>
+				</div>
+
+			</section>
+
+			<!-- show mouse lat lng -->
+			<section id="mouse-location" rv-show="mouseLocation | isNotEmpty ">
+				<div title="Latitude and Longitude" class="slds-p-around_small">{ mouseLocation }</div>
+			</section>
+
+			<!-- search bar -->
+			<section id="search-bar">
+				<div class="slds-form-element">
+					<div class="slds-form-element__control slds-input-has-icon slds-input-has-icon_left">
+						<svg class="slds-icon slds-input__icon slds-input__icon_left slds-icon-text-default" aria-hidden="true">
+							<use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="{!URLFOR($Asset.SLDS, 'assets/icons/utility-sprite/svg/symbols.svg#search')}"></use>
+						</svg>
+						<input rv-keyupdelay="searchValue" type="search" placeholder="Search..." class="slds-input" />
+					</div>
+				</div>
+			</section>
+
+			<!-- visible markers counter -->
+			<section id="counter">
+				<div rv-text="visibleMarkers | length" title="Current visible markers" class="slds-p-around_small"></div>
+			</section>
+
+			<!-- status legend -->
+			<section id="legend">
+				<label class="slds-border_bottom">Legend</label>
+				<div rv-each-status="statuses" class="slds-p-around_x-small">
+					<img rv-src="status | getIcon" />
+					<span rv-text="status"></span>
+				</div>
+				<div class="slds-p-around_x-small">
+					<img src="{!URLFOR($Resource.WorkMap, 'assets/pin_location.png')}" />
+					<span>Locations</span>
+				</div>
+				<div class="slds-p-around_x-small">
+					<img src="{!URLFOR($Resource.WorkMap, 'assets/pin_resource.png')}" />
+					<span>Resources</span>
+				</div>
+				<div class="slds-p-around_x-small">
+					<img src="{!URLFOR($Resource.WorkMap, 'assets/pin_territory.png')}" />
+					<span>Territories</span>
+				</div>
+			</section>
+
+		</div>
+
+		<!-- alert dialog box -->
+		<div rv-show="alertOpen" role="alertdialog" tabindex="0" rv-class-slds-fade-in-open="alertOpen" class="slds-modal slds-modal_prompt">
+			<div class="slds-modal__container">
+				<header class="slds-modal__header slds-theme_error slds-theme_alert-texture">
+					<h2 class="slds-text-heading_medium">{ alertTitle }</h2>
+				</header>
+				<div class="slds-modal__content slds-p-around_medium">
+					<p>{ alertMessage }</p>
+				</div>
+				<footer class="slds-modal__footer slds-theme_default">
+					<button rv-on-click="closeAlert" type="button" class="slds-button slds-button_neutral">Got It</button>
+				</footer>
+			</div>
+		</div>
+
+		<script type="text/javascript">
+			var resourceUrl = '{!URLFOR($Resource.WorkMap)}';
+			var userId = '{!$User.Id}';
+		</script>
+		<script type="text/javascript">{!googleJavascript}</script>
+		<script type="text/javascript" src="{!URLFOR($Resource.WorkMap, 'lib/geoxml3/geoxml3.min.js')}" />
+    <!-- <script type="text/javascript" src="{!URLFOR($Resource.WorkMap, 'lib/markerclusterer/markerclusterer.min.js')}" /> -->
+		<script type="text/javascript" src="{!URLFOR($Resource.WorkMap, 'lib/rivetsjs/rivets.min.js')}" />
+		<script type="text/javascript" src="{!URLFOR($Resource.WorkMap, 'lib/rivetsjs/rivets-stdlib.min.js')}" />
+		<script type="text/javascript" src="{!URLFOR($Resource.WorkMap, 'lib/dayjs/day.min.js')}" />
+		<script type="text/javascript" src="{!URLFOR($Resource.WorkMap, 'app.min.js')}" />
+
+	</body>
+
+	</html>
+
+</apex:page>
