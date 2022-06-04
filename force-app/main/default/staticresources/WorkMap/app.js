@@ -19,7 +19,6 @@
 	//* Config
 
 	const KEYS = {
-		// SELECTED_STATUSES: 'vf.workMap.selectedStatuses',
 		SELECTED_STYLE: 'vf.workMap.selectedStyle',
 	};
   const ELEMENT = document.getElementById('map');
@@ -91,24 +90,35 @@
     let appointmentsSelected = true;
 		let drawings = [];
     let locationMarkers = [];
+    let ownerId = '';
 		let resourceMarkers = [];
-		let territoryMarkers = [];
+    let selectedStatuses = [];
+    let selectedTerritories = [];
+    let selectedWorkTypes = [];
+    let territoryMarkers = [];
     let workOrderMarkers = [];
     let workOrderStatuses = [];
+
+    let currentMarkers = function() {
+      return appointmentsSelected ? appointmentMarkers : workOrderMarkers;
+    }
 
 		this.alertOpen = false;
 		this.alertTitle = '';
     this.alertMessage = '';
 
 		this.currentTab = 'tab-1';
+    this.heatMapOn = false;
+    this.markerRadius = 15;
     this.mouseLocation;
 		this.optionControlOpen = false;
     this.polygons = [];
-		this.selectedStatuses = [];
 		this.selectedStyle = getItem(KEYS.SELECTED_STYLE) || 'default';
 		this.searchValue = '';
     this.statuses = [];
+    this.territories = [];
     this.visibleMarkers = [];
+    this.workTypes = [];
 
 		this.styles = {
 			default: [],
@@ -704,32 +714,29 @@
 		};
 
 		this.toggleHeatmap = function() {
-      let arr = [];
-      if (appointmentsSelected) {
-        arr = appointmentMarkers;
-      } else {
-        arr = workOrderMarkers;
-      }
+			if (HEATMAP_LAYER.getMap()) {
+				HEATMAP_LAYER.setMap(null);
+        self.heatMapOn = false;
+			} else {
+        self.setMarkerRadius();
+				HEATMAP_LAYER.setMap(GMAP);
+        self.heatMapOn = true;
+			}
+		};
 
-			let data = arr.map(v => {
+    this.setMarkerRadius = function() {
+			let data = currentMarkers().map(v => {
 				if (v.getVisible()) {
 					return {
 						location: v.getPosition(),
-						weight: 25
 					};
 				}
 			});
-
 			HEATMAP_LAYER.setOptions({
-				data: data
+				data: data,
+        radius: self.markerRadius
 			});
-
-			if (HEATMAP_LAYER.getMap()) {
-				HEATMAP_LAYER.setMap(null);
-			} else {
-				HEATMAP_LAYER.setMap(GMAP);
-			}
-		}
+    };
 
 		this.togglePolygons = function() {
 			// set polygons to trigger rivets
@@ -759,11 +766,21 @@
 			}
 		};
 
+    this.toggleMyMarkers = function() {
+      if (ownerId) {
+        ownerId = '';
+      } else {
+        ownerId = userId;
+      }
+      filterMarkers();
+      updateVisibleMarkers();
+    };
+
     this.toggleAppointments = function(event) {
       appointmentsSelected = true;
       let checked = event.target.checked;
       // toggle the workorder checkbox
-      document.querySelector('#checkbox-7').checked = !checked;
+      document.querySelector('#checkbox-6').checked = !checked;
       // toggle work order markers
       workOrderMarkers.forEach(v => {
         v.setVisible(!checked);
@@ -772,29 +789,20 @@
 			appointmentMarkers.forEach(v => {
 				v.setVisible(checked);
 			});
-      // mark statuses checked
-      Array.from(document.querySelectorAll('#tab-2 input[type="checkbox"]')).forEach(el => {
-        el.checked = checked;
-      });
+      // set statuses
       if (checked) {
         self.statuses = appointmentStatuses;
 			} else {
         self.statuses = workOrderStatuses;
       }
-      self.selectedStatuses = [...self.statuses];
+      selectedStatuses = [...self.statuses];
+      // mark statuses checked
+      Array.from(document.querySelectorAll('#tab-2 input[type="checkbox"]')).forEach(el => {
+        el.checked = checked;
+      });
 
       updateVisibleMarkers();
 		};
-
-    this.toggleMyAppointments = function(event) {
-      appointmentMarkers.forEach(v => {
-        if (!event.target.checked) {
-          v.setVisible(true);
-        } else if (v.ownerId !== userId) {
-          v.setVisible(false);
-        }
-      });
-    };
 
 		this.toggleWorkOrders = function(event) {
       appointmentsSelected = false;
@@ -809,27 +817,16 @@
 			workOrderMarkers.forEach(v => {
 				v.setVisible(checked);
 			});
-      // mark statuses checked
-      Array.from(document.querySelectorAll('#tab-2 input[type="checkbox"]')).forEach(el => {
-        el.checked = checked;
-      });
+      // set statuses
 			if (checked) {
         self.statuses = workOrderStatuses;
 			} else {
         self.statuses = appointmentStatuses;
 			}
-      self.selectedStatuses = [...self.statuses];
-
-			updateVisibleMarkers();
-		};
-
-		this.toggleMyWorkOrders = function(event) {
-      workOrderMarkers.forEach(v => {
-        if (!event.target.checked) {
-          v.setVisible(true);
-        } else if (v.ownerId !== userId) {
-          v.setVisible(false);
-        }
+      selectedStatuses = [...self.statuses];
+      // mark statuses checked
+      Array.from(document.querySelectorAll('#tab-2 input[type="checkbox"]')).forEach(el => {
+        el.checked = checked;
       });
 
 			updateVisibleMarkers();
@@ -837,52 +834,36 @@
 
     this.toggleStatus = function(event, status) {
 			if (event[0].target.checked) {
-				self.selectedStatuses.push(status);
+				selectedStatuses.push(status);
 			} else {
-				self.selectedStatuses = self.selectedStatuses.filter(a => a !== status);
+				selectedStatuses = selectedStatuses.filter(a => a !== status);
 			}
-
-      console.log(self.selectedStatuses);
-      console.log(status);
-
-      let arr = [];
-      if (appointmentsSelected) {
-        arr = appointmentMarkers;
-      } else {
-        arr = workOrderMarkers;
-      }
-
-			arr.forEach(v => {
-				if (self.selectedStatuses.includes(v.status)) {
-					v.setVisible(true);
-				} else {
-					v.setVisible(false);
-				}
-			});
-
+      filterMarkers();
 			updateVisibleMarkers();
 		};
 
+    this.toggleTerritory = function(event, territory) {
+			if (event[0].target.checked) {
+				selectedTerritories.push(territory);
+			} else {
+				selectedTerritories = selectedTerritories.filter(a => a !== territory);
+			}
+      filterMarkers();
+			updateVisibleMarkers();
+    };
+
+    this.toggleWorkType = function(event, worktype) {
+      if (event[0].target.checked) {
+				selectedWorkTypes.push(worktype);
+			} else {
+				selectedWorkTypes = selectedWorkTypes.filter(a => a !== worktype);
+			}
+      filterMarkers();
+			updateVisibleMarkers();
+    };
+
 		this.onSearch = function() {
-			let value = self.searchValue.toLowerCase();
-
-      let arr = [];
-      if (appointmentsSelected) {
-        arr = appointmentMarkers;
-      } else {
-        arr = workOrderMarkers;
-      }
-
-			arr.forEach(v => {
-				if (!value) {
-					v.setVisible(true);
-				} else if (v.title.toLowerCase().includes(value)) {
-					v.setVisible(true);
-				} else {
-					v.setVisible(false);
-				}
-			});
-
+      filterMarkers();
 			updateVisibleMarkers();
 		};
 
@@ -898,8 +879,6 @@
 					return marker;
 				});
         GMAP.fitBounds(bounds);
-        // not sure i want to use this...
-        // new markerClusterer.MarkerClusterer({map: GMAP, markers: appointmentMarkers});
 			} else {
         self.showAlert(event.type, event.message);
       }
@@ -909,8 +888,8 @@
     WorkMapController.getAppointmentStatuses((result, event) => {
       if (event.status) {
         appointmentStatuses = result;
+        selectedStatuses = result;
         self.statuses = result;
-        self.selectedStatuses = result;
       } else {
         self.showAlert(event.type, event.message);
       }
@@ -965,22 +944,38 @@
 
 		WorkMapController.getTerritories((result, event) => {
 			if (event.status) {
-				territoryMarkers = result.map(v => {
-					let marker = new google.maps.Marker(new TerritoryMarker(v));
-					addInfoWindow(marker);
-					return marker;
-				});
+				territoryMarkers = result
+          .filter(v => v.Latitude && v.Longitude)  
+          .map(v => {
+            let marker = new google.maps.Marker(new TerritoryMarker(v));
+            addInfoWindow(marker);
+            return marker;
+          });
+        self.territories = result.map(v => {
+          selectedTerritories.push(v.Name);
+          return v.Name;
+        });
 			} else {
 				self.showAlert(event.type, event.message);
 			}
 		});
+
+    WorkMapController.getWorkTypes((result, event) => {
+      if (event.status) {
+        self.workTypes = result.map(v => {
+          selectedWorkTypes.push(v.Name);
+          return v.Name;
+        });
+      } else {
+        self.showAlert(event.type, event.message);
+      }
+    });
 
 		WorkMapController.getPolygons((result, event) => {
 			if (event.status) {
 				result.forEach(v => {
 					POLYGON_LAYER.parseKmlString(v.FSL__KML__c);
 				});
-
 				POLYGON_LAYER.docs.forEach(d => {
 					d.gpolygons.forEach(p => {
 						self.polygons.push(p);
@@ -993,17 +988,18 @@
 		}, { escape: false });
 
 		//* Intervals
+    // TODO: fix logic for finding/updating current records (to account for NEW records)
 
-		setInterval(() => {
-			if (workOrderMarkers.every(m => !m.getVisible())) {
+    setInterval(() => {
+			if (appointmentMarkers.every(m => !m.getVisible())) {
 				return;
 			}
-			WorkMapController.getWorkOrders((result, event) => {
+			WorkMapController.getServiceAppointments((result, event) => {
 				if (event.status) {
-					workOrderMarkers = workOrderMarkers.map(marker => {
+					appointmentMarkers = appointmentMarkers.map(marker => {
 						let record = result.find(v => v.Id === marker.id);
 						if (record) {
-							Object.assign(marker, new WorkOrderMarker(record));
+							Object.assign(marker, new ServiceAppointmentMarker(record));
 							marker.setIcon(marker.icon); // doesn't update unless called explictly
 						} else {
 							marker.setMap(null);
@@ -1015,15 +1011,15 @@
 		}, 15 * 60 * 1000);
 
 		setInterval(() => {
-			if (appointmentMarkers.every(m => !m.getVisible())) {
+			if (workOrderMarkers.every(m => !m.getVisible())) {
 				return;
 			}
-			WorkMapController.getServiceAppointments((result, event) => {
+			WorkMapController.getWorkOrders((result, event) => {
 				if (event.status) {
-					appointmentMarkers = appointmentMarkers.map(marker => {
+					workOrderMarkers = workOrderMarkers.map(marker => {
 						let record = result.find(v => v.Id === marker.id);
 						if (record) {
-							Object.assign(marker, new ServiceAppointmentMarker(record));
+							Object.assign(marker, new WorkOrderMarker(record));
 							marker.setIcon(marker.icon);
 						} else {
 							marker.setMap(null);
@@ -1054,17 +1050,51 @@
 
 		//* Utilities
 	
+    function filterMarkers() {
+			currentMarkers().forEach(m => {
+        // filter by status
+        if (m.status && selectedStatuses.length > 0) {
+          if (!selectedStatuses.includes(m.status)) {
+            m.setVisible(false);
+            return;
+          }
+        }
+        // filter by territory
+        if (m.territory && selectedTerritories.length > 0) {
+          if (!selectedTerritories.includes(m.territory)) {
+            m.setVisible(false);
+            return;
+          }
+        }
+        // filter by worktype
+        if (m.worktype && selectedWorkTypes.length > 0) {
+          if (!selectedWorkTypes.includes(m.worktype)) {
+            m.setVisible(false);
+            return;
+          }
+        }
+        // filter by owner
+        if (ownerId) {
+          if (m.ownerId !== ownerId) {
+            m.setVisible(false);
+            return;
+          }
+        }
+        // filter by search value
+        if (self.searchValue) {
+          let value = self.searchValue.toLowerCase();
+          if (!m.title.toLowerCase().includes(value)) {
+            m.setVisible(false);
+            return;
+          }
+        }
+        m.setVisible(true);
+			});
+    }
+
 		function updateVisibleMarkers() {
 			let bounds = GMAP.getBounds();
-
-      let arr = [];
-      if (appointmentsSelected) {
-        arr = appointmentMarkers;
-      } else {
-        arr = workOrderMarkers;
-      }
-
-			self.visibleMarkers = arr.filter(m => {
+			self.visibleMarkers = currentMarkers().filter(m => {
 				return bounds.contains(m.getPosition()) && m.getVisible();
 			});
 		}
@@ -1116,12 +1146,6 @@
 		function addPolygonListener(polygon) {
 			let infoWindow = new google.maps.InfoWindow();
 			google.maps.event.addListener(polygon, 'click', function(event) {
-        let arr = [];
-        if (appointmentsSelected) {
-          arr = appointmentMarkers;
-        } else {
-          arr = workOrderMarkers;
-        }
 				activeInfoWindow?.close();
         // set stroke for all polygons
 				self.polygons.map(p => {
@@ -1130,7 +1154,7 @@
         // set stroke for this polygon
 				this.setOptions({ strokeWeight: 3 });
         // count the number of work orders in this polygon
-				let count = arr.reduce((a, m) => {
+				let count = currentMarkers().reduce((a, m) => {
 					if (m.getVisible() && google.maps.geometry.poly.containsLocation(m.getPosition(), this)) {
 						return ++a;
 					}
@@ -1189,7 +1213,9 @@
 		this.ownerId = record.OwnerId;
 		this.position = new google.maps.LatLng(latitude, longitude);
     this.status = record.StatusCategory;
+    this.territory = record.TerritoryName;
 		this.title = decodeHtml(record.Label);
+    this.worktype = record.WorkTypeName;
     this.infoWindow = getTooltip({
       'Id': record.Id,
       'Number': record.AppointmentNumber,
@@ -1197,7 +1223,8 @@
       'Work Type': record.WorkTypeName,
       'Account': record.AccountName,
       'Contact': record.ContactName,
-      'Address': getAddress(record)
+      'Address': getAddress(record),
+      'Territory': record.TerritoryName
     });
 	}
 
@@ -1211,7 +1238,9 @@
 		this.ownerId = record.OwnerId;
 		this.position = new google.maps.LatLng(latitude, longitude);
 		this.status = record.StatusCategory;
+    this.territory = record.TerritoryName;
 		this.title = decodeHtml(record.Label);
+    this.worktype = record.WorkTypeName;
     this.infoWindow = getTooltip({
       'Id': record.Id,
       'Number': record.WorkOrderNumber,
@@ -1219,7 +1248,8 @@
       'Work Type': record.WorkTypeName,
       'Account': record.AccountName,
       'Contact': record.ContactName,
-      'Address': getAddress(record)
+      'Address': getAddress(record),
+      'Territory': record.TerritoryName
     });
 	}
 

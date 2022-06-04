@@ -48,11 +48,17 @@
 					<li rv-class-slds-is-active="currentTab | == 'tab-2'"  class="slds-tabs_default__item" role="presentation">
 						<a rv-on-click="openTab" class="slds-tabs_default__link" role="tab" aria-controls="tab-2">Statuses</a>
 					</li>
-					<li rv-class-slds-is-active="currentTab | == 'tab-3'"  class="slds-tabs_default__item" role="presentation">
-						<a rv-on-click="openTab" class="slds-tabs_default__link" role="tab" aria-controls="tab-3">Layers</a>
+          <li rv-class-slds-is-active="currentTab | == 'tab-3'"  class="slds-tabs_default__item" role="presentation">
+						<a rv-on-click="openTab" class="slds-tabs_default__link" role="tab" aria-controls="tab-3">Territories</a>
 					</li>
-					<li rv-class-slds-is-active="currentTab | == 'tab-4'"  class="slds-tabs_default__item" role="presentation">
-						<a rv-on-click="openTab" class="slds-tabs_default__link" role="tab" aria-controls="tab-4">Style</a>
+          <li rv-class-slds-is-active="currentTab | == 'tab-4'"  class="slds-tabs_default__item" role="presentation">
+						<a rv-on-click="openTab" class="slds-tabs_default__link" role="tab" aria-controls="tab-4">Work Types</a>
+					</li>
+					<li rv-class-slds-is-active="currentTab | == 'tab-5'"  class="slds-tabs_default__item" role="presentation">
+						<a rv-on-click="openTab" class="slds-tabs_default__link" role="tab" aria-controls="tab-5">Layers</a>
+					</li>
+					<li rv-class-slds-is-active="currentTab | == 'tab-6'"  class="slds-tabs_default__item" role="presentation">
+						<a rv-on-click="openTab" class="slds-tabs_default__link" role="tab" aria-controls="tab-6">Style</a>
 					</li>
 				</ul>
 
@@ -93,7 +99,7 @@
 								</label>
 							</div>
 
-              <div id="appointment-inputs" class="slds-border_top slds-m-vertical_xx-small slds-p-top_xx-small">
+              <div class="slds-border_top slds-m-vertical_xx-small slds-p-top_xx-small">
                 <div class="slds-checkbox slds-p-bottom_xx-small">
                   <input id="checkbox-5" type="checkbox" rv-on-click="toggleAppointments" checked="checked" />
                   <label for="checkbox-5" class="slds-checkbox__label">
@@ -101,28 +107,24 @@
                     <span class="slds-form-element__label">Service Appointments</span>
                   </label>
                 </div>
-                <div class="slds-checkbox slds-p-bottom_xx-small">
-                  <input id="checkbox-6" type="checkbox" rv-on-click="toggleMyAppointments" />
-                  <label for="checkbox-6" class="slds-checkbox__label">
-                    <span class="slds-checkbox_faux"></span>
-                    <span class="slds-form-element__label">My Appointments Only</span>
-                  </label>
-                </div>
               </div>
 
-              <div id="workorder-inputs" class="slds-border_top slds-m-vertical_xx-small slds-p-top_xx-small">
+              <div class="slds-border_top slds-m-vertical_xx-small slds-p-top_xx-small">
                 <div class="slds-checkbox slds-p-bottom_xx-small">
-                  <input id="checkbox-7" type="checkbox" rv-on-click="toggleWorkOrders" />
-                  <label for="checkbox-7" class="slds-checkbox__label">
+                  <input id="checkbox-6" type="checkbox" rv-on-click="toggleWorkOrders" />
+                  <label for="checkbox-6" class="slds-checkbox__label">
                     <span class="slds-checkbox_faux"></span>
                     <span class="slds-form-element__label">Work Orders</span>
                   </label>
                 </div>
+              </div>
+
+              <div class="slds-border_top slds-m-vertical_xx-small slds-p-top_xx-small">
                 <div class="slds-checkbox slds-p-bottom_xx-small">
-                  <input id="checkbox-8" type="checkbox" rv-on-click="toggleMyWorkOrders" />
-                  <label for="checkbox-8" class="slds-checkbox__label">
+                  <input id="checkbox-7" type="checkbox" rv-on-click="toggleMyMarkers" />
+                  <label for="checkbox-7" class="slds-checkbox__label">
                     <span class="slds-checkbox_faux"></span>
-                    <span class="slds-form-element__label">My Work Orders Only</span>
+                    <span class="slds-form-element__label">My Markers Only</span>
                   </label>
                 </div>
               </div>
@@ -131,11 +133,11 @@
 					</div>
 				</div>
 
-				<!-- tab 2 -->
+				<!-- tab 2 - statuses -->
 				<div id="tab-2" rv-show="currentTab | == 'tab-2'" class="slds-tabs_default__content slds-p-horizontal_small" role="tabpanel">
 					<div class="slds-form-element">
 						<div class="slds-form-element__control">
-							<div id="statusboxes" rv-each-status="statuses" class="slds-checkbox slds-p-bottom_xx-small">
+							<div rv-each-status="statuses" class="slds-checkbox slds-p-bottom_xx-small">
 								<input
 									rv-id="%status% | prepend 'status-'"
                   rv-on-click="toggleStatus | args status"
@@ -150,8 +152,46 @@
 					</div>
 				</div>
 
-				<!-- tab 3 -->
+        <!-- tab 3 - territories -->
 				<div id="tab-3" rv-show="currentTab | == 'tab-3'" class="slds-tabs_default__content slds-p-horizontal_small" role="tabpanel">
+					<div class="slds-form-element">
+						<div class="slds-form-element__control">
+							<div rv-each-territory="territories" class="slds-checkbox slds-p-bottom_xx-small slds-scrollable_y" style="max-height:50vh;">
+								<input
+									rv-id="%territory% | prepend 'territory-'"
+                  rv-on-click="toggleTerritory | args territory"
+									type="checkbox"
+									checked="true" />
+								<label rv-for="%territory% | prepend 'territory-'" class="slds-checkbox__label">
+									<span class="slds-checkbox_faux"></span>
+									<span class="slds-form-element__label">{ territory }</span>
+								</label>
+							</div>
+						</div>
+					</div>
+				</div>
+
+        <!-- tab 4 - work types -->
+				<div id="tab-4" rv-show="currentTab | == 'tab-4'" class="slds-tabs_default__content slds-p-horizontal_small" role="tabpanel">
+					<div class="slds-form-element">
+						<div class="slds-form-element__control">
+							<div rv-each-worktype="workTypes" class="slds-checkbox slds-p-bottom_xx-small slds-scrollable_y" style="max-height:50vh;">
+								<input
+									rv-id="%worktype% | prepend 'worktype-'"
+                  rv-on-click="toggleWorkType | args worktype"
+									type="checkbox"
+									checked="true" />
+								<label rv-for="%worktype% | prepend 'worktype-'" class="slds-checkbox__label">
+									<span class="slds-checkbox_faux"></span>
+									<span class="slds-form-element__label">{ worktype }</span>
+								</label>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- tab 5 - layers -->
+				<div id="tab-5" rv-show="currentTab | == 'tab-5'" class="slds-tabs_default__content slds-p-horizontal_small" role="tabpanel">
 					<div class="slds-form-element">
 						<div class="slds-form-element__control">
 
@@ -189,6 +229,28 @@
 
 						</div>
 					</div>
+
+          <div rv-show="heatMapOn" class="slds-form-element slds-border_top slds-m-top_x-small">
+            <label class="slds-form-element__label" for="slider-id-01">
+              <span class="slds-slider-label">
+                <span class="slds-slider-label__label">Marker Radius</span>
+                <span class="slds-slider-label__range">0 - 100</span>
+              </span>
+            </label>
+            <div class="slds-form-element__control">
+              <div class="slds-slider slds-size_large">
+                <input 
+                  id="slider-id-01"
+                  type="range" 
+                  class="slds-slider__range" 
+                  rv-value="markerRadius" 
+                  rv-on-change="setMarkerRadius" 
+                />
+                <span class="slds-slider__value" aria-hidden="true">{ markerRadius }</span>
+              </div>
+            </div>
+          </div>
+
 					<div rv-show="polygons | none null 'map'" class="slds-border_top slds-m-top_x-small slds-scrollable_y" style="max-height:50vh;">
 						<ul class="slds-has-dividers_bottom-space slds-p-vertical_x-small">
 							<li
@@ -206,10 +268,11 @@
 							</li>
 						</ul>
 					</div>
+
 				</div>
 
-				<!-- tab 4 -->
-				<div id="tab-4" rv-show="currentTab | == 'tab-4'" class="slds-tabs_default__content slds-p-horizontal_small" role="tabpanel">
+				<!-- tab 6 - styles -->
+				<div id="tab-6" rv-show="currentTab | == 'tab-6'" class="slds-tabs_default__content slds-p-horizontal_small" role="tabpanel">
 					<fieldset class="slds-form-element">
 						<div class="slds-form-element__control">
 							<span rv-each-style="styles | keys" class="slds-radio slds-p-bottom_xx-small">
@@ -291,7 +354,6 @@
 		</script>
 		<script type="text/javascript">{!googleJavascript}</script>
 		<script type="text/javascript" src="{!URLFOR($Resource.WorkMap, 'lib/geoxml3/geoxml3.min.js')}" />
-    <!-- <script type="text/javascript" src="{!URLFOR($Resource.WorkMap, 'lib/markerclusterer/markerclusterer.min.js')}" /> -->
 		<script type="text/javascript" src="{!URLFOR($Resource.WorkMap, 'lib/rivetsjs/rivets.min.js')}" />
 		<script type="text/javascript" src="{!URLFOR($Resource.WorkMap, 'lib/rivetsjs/rivets-stdlib.min.js')}" />
 		<script type="text/javascript" src="{!URLFOR($Resource.WorkMap, 'lib/dayjs/day.min.js')}" />

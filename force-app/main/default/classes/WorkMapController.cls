@@ -29,8 +29,11 @@ public with sharing class WorkMapController {
 
 	public String googleJavascript { get; private set; }
   private transient Work_Map_Settings__mdt setting;
-  private transient String url = 'https://maps.googleapis.com/maps/api/js?key={0}&libraries=drawing,geometry,visualization';
-  private static transient List<String> restrictedStatuses = new List<String>{'Completed', 'Closed', 'Cannot Complete', 'Canceled'};
+  private transient String url = 
+    'https://maps.googleapis.com/maps/api/js?key={0}&libraries=drawing,geometry,visualization';
+  // these are the StatusCategory "values"
+  private static transient List<String> restrictedStatuses = 
+    new List<String>{'Completed', 'Closed', 'CannotComplete', 'Canceled'};
 
   public WorkMapController() {
     try {
@@ -41,7 +44,7 @@ public with sharing class WorkMapController {
         LIMIT 1
       ];
     } catch (QueryException e) {
-      throw new VisualforceException('No Work Map setting named "Default" found, please create it and try again.');
+      throw new VisualforceException('No Work Map setting named "Default" found, please create it.');
     }
 
     this.url = String.format(this.url, new List<String>{
@@ -68,14 +71,14 @@ public with sharing class WorkMapController {
 
     for (ServiceAppointment sa : [
 			SELECT Id, Account.Name, Account.BillingLatitude, Account.BillingLongitude, 
-        Contact.Name, Contact.MailingLatitude, Contact.MailingLongitude, 
+        Contact.Name, Contact.MailingLatitude, Contact.MailingLongitude, ServiceTerritory.Name, 
         AppointmentNumber, Latitude, Longitude, Status, toLabel(StatusCategory), 
 				FSL__GanttLabel__c, WorkType.Name, Street, City, State, PostalCode, Country, OwnerId 
 			FROM ServiceAppointment 
 			WHERE ((Latitude != null AND Longitude != null) 
           OR (Account.BillingLatitude != null AND Account.BillingLongitude != null) 
           OR (Contact.MailingLatitude != null AND Contact.MailingLongitude != null)) 
-				AND toLabel(StatusCategory) NOT IN :restrictedStatuses 
+				AND StatusCategory NOT IN :restrictedStatuses 
 			WITH SECURITY_ENFORCED
 		]) {
       results.add(new ServiceAppointmentWrapper(sa));
@@ -90,14 +93,14 @@ public with sharing class WorkMapController {
 
     for (WorkOrder wo : [
 			SELECT Id, Account.Name, Account.BillingLatitude, Account.BillingLongitude, 
-        Contact.Name, Contact.MailingLatitude, Contact.MailingLongitude, 
+        Contact.Name, Contact.MailingLatitude, Contact.MailingLongitude, ServiceTerritory.Name, 
         Latitude, Longitude, WorkOrderNumber, Status, toLabel(StatusCategory), 
 				WorkType.Name, Street, City, State, PostalCode, Country, OwnerId 
 			FROM WorkOrder 
 			WHERE ((Latitude != null AND Longitude != null) 
           OR (Account.BillingLatitude != null AND Account.BillingLongitude != null) 
           OR (Contact.MailingLatitude != null AND Contact.MailingLongitude != null)) 
-				AND toLabel(StatusCategory) NOT IN :restrictedStatuses 
+				AND StatusCategory NOT IN :restrictedStatuses 
 			WITH SECURITY_ENFORCED 
 		]) {
       results.add(new WorkOrderWrapper(wo));
@@ -111,7 +114,7 @@ public with sharing class WorkMapController {
     List<LocationWrapper> results = new List<LocationWrapper>();
 
     for (Schema.Location loc : [
-      SELECT Id, Name, LocationType, OpenDate, VisitorAddress.Latitude, VisitorAddress.Longitude, 
+      SELECT Id, Name, toLabel(LocationType), OpenDate, VisitorAddress.Latitude, VisitorAddress.Longitude, 
         VisitorAddress.Street, VisitorAddress.City, VisitorAddress.State, VisitorAddress.PostalCode, VisitorAddress.Country
       FROM Location 
       WHERE VisitorAddress.Latitude != null AND VisitorAddress.Longitude != null 
@@ -144,14 +147,37 @@ public with sharing class WorkMapController {
 	}
 
 	@RemoteAction
-	public static List<ServiceTerritory> getTerritories() {
-		return [
-			SELECT Id, Name, Street, City, State, PostalCode, Latitude, Longitude 
+	public static List<ServiceTerritoryWrapper> getTerritories() {
+    List<ServiceTerritoryWrapper> results = new List<ServiceTerritoryWrapper>();
+
+		for (ServiceTerritory st : [
+			SELECT Id, Name, Street, City, State, PostalCode, Country, Latitude, Longitude 
 			FROM ServiceTerritory 
-			WHERE Latitude != null AND Longitude != null AND IsActive = true 
+			WHERE IsActive = true 
 			WITH SECURITY_ENFORCED 
-		];
+      ORDER BY Name
+		]) {
+      results.add(new ServiceTerritoryWrapper(st));
+    }
+
+    return results;
 	}
+
+  @RemoteAction
+  public static List<WorkTypeWrapper> getWorkTypes() {
+    List<WorkTypeWrapper> results = new List<WorkTypeWrapper>();
+
+    for (WorkType wt : [
+      SELECT Id, Name 
+      FROM WorkType 
+      WITH SECURITY_ENFORCED 
+      ORDER BY Name
+    ]) {
+      results.add(new WorkTypeWrapper(wt));
+    }
+
+    return results;
+  }
 
 	@RemoteAction
 	public static List<FSL__Polygon__c> getPolygons() {
@@ -176,9 +202,10 @@ public with sharing class WorkMapController {
     List<String> result = new List<String>();
     Schema.DescribeFieldResult fieldResult = field.getDescribe();
     for (Schema.PicklistEntry ple : fieldResult.getPicklistValues()) {
-      String label = ple.getLabel().normalizeSpace();
-      if (ple.isActive() && !restrictedStatuses.contains(label)) {
-        result.add(label);
+      // need to account for the space behind "Canceled"
+      String value = ple.getValue().normalizeSpace();
+      if (ple.isActive() && !restrictedStatuses.contains(value)) {
+        result.add(ple.getLabel().normalizeSpace());
       }
     }
     return result;
@@ -195,6 +222,7 @@ public with sharing class WorkMapController {
     public String AppointmentNumber;
     public String Status;
     public String StatusCategory;
+    public String TerritoryName;
     public String WorkTypeName;
     public String Street;
     public String City;
@@ -219,6 +247,7 @@ public with sharing class WorkMapController {
       this.AppointmentNumber = sa.AppointmentNumber;
       this.Status = sa.Status?.normalizeSpace();
       this.StatusCategory = sa.StatusCategory?.normalizeSpace();
+      this.TerritoryName = sa.ServiceTerritory?.Name.normalizeSpace();
       this.WorkTypeName = sa.WorkType?.Name.normalizeSpace();
       this.Street = sa.Street?.normalizeSpace();
       this.City = sa.City?.normalizeSpace();
@@ -240,6 +269,7 @@ public with sharing class WorkMapController {
     public String WorkOrderNumber;
     public String Status;
     public String StatusCategory;
+    public String TerritoryName;
     public String WorkTypeName;
     public String Street;
     public String City;
@@ -264,6 +294,7 @@ public with sharing class WorkMapController {
       this.WorkOrderNumber = wo.WorkOrderNumber;
       this.Status = wo.Status?.normalizeSpace();
       this.StatusCategory = wo.StatusCategory?.normalizeSpace();
+      this.TerritoryName = wo.ServiceTerritory?.Name.normalizeSpace();
       this.WorkTypeName = wo.WorkType?.Name.normalizeSpace();
       this.Street = wo.Street?.normalizeSpace();
       this.City = wo.City?.normalizeSpace();
@@ -280,7 +311,7 @@ public with sharing class WorkMapController {
     public Double Latitude;
     public Double Longitude;
     public String Name;
-    public DateTime OpenDate;
+    public Datetime OpenDate;
     public String Type;
     public String Street;
     public String City;
@@ -293,7 +324,7 @@ public with sharing class WorkMapController {
       this.Latitude = loc.VisitorAddress?.Latitude;
       this.Longitude = loc.VisitorAddress?.Longitude;
       this.Name = loc.Name?.normalizeSpace();
-      this.OpenDate = loc.OpenDate;      
+      this.OpenDate = loc.OpenDate;
       this.Type = loc.LocationType?.normalizeSpace();
       this.Street = loc.VisitorAddress?.Street?.normalizeSpace();
       this.City = loc.VisitorAddress?.City?.normalizeSpace();
@@ -311,7 +342,7 @@ public with sharing class WorkMapController {
     public String Photo;
     public Double LastKnownLatitude;
     public Double LastKnownLongitude;
-    public DateTime LastKnownLocationDate;
+    public Datetime LastKnownLocationDate;
 
     public ServiceResourceWrapper(ServiceResource sr) {
       this.Id = sr.Id;
@@ -325,6 +356,42 @@ public with sharing class WorkMapController {
       this.LastKnownLatitude = sr.LastKnownLatitude;
       this.LastKnownLongitude = sr.LastKnownLongitude;
       this.LastKnownLocationDate = sr.LastKnownLocationDate;
+    }
+  }
+
+  @TestVisible
+  private class ServiceTerritoryWrapper {
+    public String Id;
+    public String Name;
+    public Double Latitude;
+    public Double Longitude;
+    public String Street;
+    public String City;
+    public String State;
+    public String PostalCode;
+    public String Country;
+
+    public ServiceTerritoryWrapper(ServiceTerritory st) {
+      this.Id = st.Id;
+      this.Name = st.Name.normalizeSpace();
+      this.Latitude = st.Latitude;
+      this.Longitude = st.Longitude;
+      this.Street = st.Street?.normalizeSpace();
+      this.City = st.City?.normalizeSpace();
+      this.State = st.State?.normalizeSpace();
+      this.PostalCode = st.PostalCode?.normalizeSpace();
+      this.Country = st.Country?.normalizeSpace();
+    }
+  }
+
+  @TestVisible
+  private class WorkTypeWrapper {
+    public String Id;
+    public String Name;
+
+    public WorkTypeWrapper(WorkType wt) {
+      this.Id = wt.Id;
+      this.Name = wt.Name.normalizeSpace();
     }
   }
 
