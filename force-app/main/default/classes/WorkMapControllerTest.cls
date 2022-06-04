@@ -37,6 +37,11 @@ public class WorkMapControllerTest {
     loc.VisitorAddressId = addr.Id;
     update loc;
 
+    WorkType wt = new WorkType();
+    wt.Name = 'Work Type';
+    wt.EstimatedDuration = 1;
+    insert wt;
+
     ServiceResource sr = new ServiceResource();
     sr.IsActive = true;
     sr.Name = usr.Alias;
@@ -51,12 +56,14 @@ public class WorkMapControllerTest {
     sa.EarliestStartTime = Datetime.now().addDays(-7);
     sa.Latitude = latitude;
     sa.Longitude = longitude;
+    sa.WorkTypeId = wt.Id;
     insert sa;
 
     WorkOrder wo = new WorkOrder();
     wo.AccountId = acc.Id;
     wo.Latitude = latitude;
     wo.Longitude = longitude;
+    wo.WorkTypeId = wt.Id;
     insert wo;
 
     OperatingHours oh = new OperatingHours();
@@ -78,7 +85,7 @@ public class WorkMapControllerTest {
 		Test.startTest();
 		WorkMapController controller = new WorkMapController();
 		Test.stopTest();
-		System.assertNotEquals(null, controller.googleJavascript);
+		System.assert(String.isNotEmpty(controller.googleJavascript));
 	}
 
 	@IsTest
@@ -86,7 +93,7 @@ public class WorkMapControllerTest {
 		Test.startTest();
 		List<WorkMapController.WorkOrderWrapper> results = WorkMapController.getWorkOrders();
 		Test.stopTest();
-		System.assertNotEquals(null, results);
+		System.assert(results.size() > 0);
 	}
 
 	@IsTest
@@ -94,7 +101,7 @@ public class WorkMapControllerTest {
 		Test.startTest();
 		List<WorkMapController.ServiceAppointmentWrapper> results = WorkMapController.getServiceAppointments();
 		Test.stopTest();
-		System.assertNotEquals(null, results);
+		System.assert(results.size() > 0);
 	}
 
 	@IsTest
@@ -102,7 +109,7 @@ public class WorkMapControllerTest {
 		Test.startTest();
 		List<WorkMapController.LocationWrapper> results = WorkMapController.getLocations();
 		Test.stopTest();
-		System.assertNotEquals(null, results);
+		System.assert(results.size() > 0);
 	}
 
 	@IsTest
@@ -110,7 +117,15 @@ public class WorkMapControllerTest {
 		Test.startTest();
 		List<WorkMapController.ServiceResourceWrapper> results = WorkMapController.getResources();
 		Test.stopTest();
-		System.assertNotEquals(null, results);
+		System.assert(results.size() > 0);
+	}
+
+  @IsTest
+	static void testGetTerritories() {
+		Test.startTest();
+		List<WorkMapController.ServiceTerritoryWrapper> results = WorkMapController.getTerritories();
+		Test.stopTest();
+		System.assert(results.size() > 0);
 	}
 
 	@IsTest
@@ -121,13 +136,13 @@ public class WorkMapControllerTest {
 		System.assertNotEquals(null, results);
 	}
 
-	@IsTest
-	static void testGetTerritories() {
-		Test.startTest();
-		List<ServiceTerritory> results = WorkMapController.getTerritories();
-		Test.stopTest();
-		System.assertNotEquals(null, results);
-	}
+  @IsTest
+  static void testGetWorkTypes() {
+    Test.startTest();
+    List<WorkMapController.WorkTypeWrapper> results = WorkMapController.getWorkTypes();
+    Test.stopTest();
+    System.assert(results.size() > 0);
+  }
 
   @IsTest
   static void testGetStatuses() {
