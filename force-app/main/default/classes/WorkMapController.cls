@@ -27,7 +27,7 @@
 
 public with sharing class WorkMapController {
 
-	public String googleJavascript { get; private set; }
+  public String googleJavascript { get; private set; }
   private transient Work_Map_Settings__mdt setting;
   private transient String url = 
     'https://maps.googleapis.com/maps/api/js?key={0}&libraries=drawing,geometry,visualization';
@@ -65,49 +65,49 @@ public with sharing class WorkMapController {
     this.googleJavascript = response.getBody();
   }
 
-	@RemoteAction
-	public static List<ServiceAppointmentWrapper> getServiceAppointments() {
+  @RemoteAction
+  public static List<ServiceAppointmentWrapper> getServiceAppointments() {
     List<ServiceAppointmentWrapper> results = new List<ServiceAppointmentWrapper>();
 
     for (ServiceAppointment sa : [
-			SELECT Id, Account.Name, Account.BillingLatitude, Account.BillingLongitude, 
+      SELECT Id, Account.Name, Account.BillingLatitude, Account.BillingLongitude, 
         Contact.Name, Contact.MailingLatitude, Contact.MailingLongitude, ServiceTerritory.Name, 
         AppointmentNumber, Latitude, Longitude, Status, toLabel(StatusCategory), 
-				FSL__GanttLabel__c, WorkType.Name, Street, City, State, PostalCode, Country, OwnerId 
-			FROM ServiceAppointment 
-			WHERE ((Latitude != null AND Longitude != null) 
+        FSL__GanttLabel__c, WorkType.Name, Street, City, State, PostalCode, Country, OwnerId 
+      FROM ServiceAppointment 
+      WHERE ((Latitude != null AND Longitude != null) 
           OR (Account.BillingLatitude != null AND Account.BillingLongitude != null) 
           OR (Contact.MailingLatitude != null AND Contact.MailingLongitude != null)) 
-				AND StatusCategory NOT IN :restrictedStatuses 
-			WITH SECURITY_ENFORCED
-		]) {
+        AND StatusCategory NOT IN :restrictedStatuses 
+      WITH SECURITY_ENFORCED
+    ]) {
       results.add(new ServiceAppointmentWrapper(sa));
     }
 
     return results;
-	}
+  }
 
   @RemoteAction
-	public static List<WorkOrderWrapper> getWorkOrders() {
+  public static List<WorkOrderWrapper> getWorkOrders() {
     List<WorkOrderWrapper> results = new List<WorkOrderWrapper>();
 
     for (WorkOrder wo : [
-			SELECT Id, Account.Name, Account.BillingLatitude, Account.BillingLongitude, 
+      SELECT Id, Account.Name, Account.BillingLatitude, Account.BillingLongitude, 
         Contact.Name, Contact.MailingLatitude, Contact.MailingLongitude, ServiceTerritory.Name, 
         Latitude, Longitude, WorkOrderNumber, Status, toLabel(StatusCategory), 
-				WorkType.Name, Street, City, State, PostalCode, Country, OwnerId 
-			FROM WorkOrder 
-			WHERE ((Latitude != null AND Longitude != null) 
+        WorkType.Name, Street, City, State, PostalCode, Country, OwnerId 
+      FROM WorkOrder 
+      WHERE ((Latitude != null AND Longitude != null) 
           OR (Account.BillingLatitude != null AND Account.BillingLongitude != null) 
           OR (Contact.MailingLatitude != null AND Contact.MailingLongitude != null)) 
-				AND StatusCategory NOT IN :restrictedStatuses 
-			WITH SECURITY_ENFORCED 
-		]) {
+        AND StatusCategory NOT IN :restrictedStatuses 
+      WITH SECURITY_ENFORCED 
+    ]) {
       results.add(new WorkOrderWrapper(wo));
     }
 
     return results;
-	}
+  }
 
   @RemoteAction
   public static List<LocationWrapper> getLocations() {
@@ -127,41 +127,41 @@ public with sharing class WorkMapController {
     return results;
   }
 
-	@RemoteAction
-	public static List<ServiceResourceWrapper> getResources() {
+  @RemoteAction
+  public static List<ServiceResourceWrapper> getResources() {
     List<ServiceResourceWrapper> results = new List<ServiceResourceWrapper>();
 
-		for (ServiceResource sr : [
-			SELECT Id, Name, FSL__GanttLabel__c, FSL__Picture_Link__c, 
+    for (ServiceResource sr : [
+      SELECT Id, Name, FSL__GanttLabel__c, FSL__Picture_Link__c, 
         toLabel(ResourceType), RelatedRecord.Title, RelatedRecord.SmallPhotoUrl, 
         LastKnownLatitude, LastKnownLongitude, LastKnownLocationDate 
-			FROM ServiceResource 
-			WHERE LastKnownLatitude != null AND LastKnownLongitude != null 
+      FROM ServiceResource 
+      WHERE LastKnownLatitude != null AND LastKnownLongitude != null 
         AND LastKnownLocationDate = LAST_N_DAYS:31 AND IsActive = true 
-			WITH SECURITY_ENFORCED 
-		]) {
+      WITH SECURITY_ENFORCED 
+    ]) {
       results.add(new ServiceResourceWrapper(sr));
     }
 
     return results;
-	}
+  }
 
-	@RemoteAction
-	public static List<ServiceTerritoryWrapper> getTerritories() {
+  @RemoteAction
+  public static List<ServiceTerritoryWrapper> getTerritories() {
     List<ServiceTerritoryWrapper> results = new List<ServiceTerritoryWrapper>();
 
-		for (ServiceTerritory st : [
-			SELECT Id, Name, Street, City, State, PostalCode, Country, Latitude, Longitude 
-			FROM ServiceTerritory 
-			WHERE IsActive = true 
-			WITH SECURITY_ENFORCED 
+    for (ServiceTerritory st : [
+      SELECT Id, Name, Street, City, State, PostalCode, Country, Latitude, Longitude 
+      FROM ServiceTerritory 
+      WHERE IsActive = true 
+      WITH SECURITY_ENFORCED 
       ORDER BY Name
-		]) {
+    ]) {
       results.add(new ServiceTerritoryWrapper(st));
     }
 
     return results;
-	}
+  }
 
   @RemoteAction
   public static List<WorkTypeWrapper> getWorkTypes() {
@@ -179,24 +179,24 @@ public with sharing class WorkMapController {
     return results;
   }
 
-	@RemoteAction
-	public static List<FSL__Polygon__c> getPolygons() {
-		return [
-			SELECT Id, FSL__KML__c 
-			FROM FSL__Polygon__c 
-			WITH SECURITY_ENFORCED
-		];
-	}
+  @RemoteAction
+  public static List<FSL__Polygon__c> getPolygons() {
+    return [
+      SELECT Id, FSL__KML__c 
+      FROM FSL__Polygon__c 
+      WITH SECURITY_ENFORCED
+    ];
+  }
 
   @RemoteAction
-	public static List<String> getAppointmentStatuses() {
+  public static List<String> getAppointmentStatuses() {
     return getStatuses(ServiceAppointment.StatusCategory);
-	}
+  }
 
   @RemoteAction
-	public static List<String> getWorkOrderStatuses() {
+  public static List<String> getWorkOrderStatuses() {
     return getStatuses(WorkOrder.StatusCategory);
-	}
+  }
 
   private static List<String> getStatuses(Schema.SObjectField field) {
     List<String> result = new List<String>();

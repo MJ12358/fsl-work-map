@@ -4,8 +4,8 @@ public class WorkMapControllerTest {
   private static Double latitude = 47.8438;
   private static Double longitude = -124.7929;
 
-	@TestSetup
-	static void testSetup() {
+  @TestSetup
+  static void testSetup() {
     Account acc = new Account();
     acc.Name = 'Test Company';
     insert acc;
@@ -75,66 +75,66 @@ public class WorkMapControllerTest {
     st.Name = 'Service Territory';
     st.OperatingHoursId = oh.Id;
     insert st;
-	}
-
-	@IsTest
-	static void testConstructor() {
-		CalloutMock mock = new CalloutMock();
-		Test.setMock(HttpCalloutMock.class, mock);
-		Test.setCurrentPage(Page.WorkMap);
-		Test.startTest();
-		WorkMapController controller = new WorkMapController();
-		Test.stopTest();
-		System.assert(String.isNotEmpty(controller.googleJavascript));
-	}
-
-	@IsTest
-	static void testGetWorkOrders() {
-		Test.startTest();
-		List<WorkMapController.WorkOrderWrapper> results = WorkMapController.getWorkOrders();
-		Test.stopTest();
-		System.assert(results.size() > 0);
-	}
-
-	@IsTest
-	static void testGetServiceAppointments() {
-		Test.startTest();
-		List<WorkMapController.ServiceAppointmentWrapper> results = WorkMapController.getServiceAppointments();
-		Test.stopTest();
-		System.assert(results.size() > 0);
-	}
-
-	@IsTest
-	static void testGetLocations() {
-		Test.startTest();
-		List<WorkMapController.LocationWrapper> results = WorkMapController.getLocations();
-		Test.stopTest();
-		System.assert(results.size() > 0);
-	}
-
-	@IsTest
-	static void testGetResources() {
-		Test.startTest();
-		List<WorkMapController.ServiceResourceWrapper> results = WorkMapController.getResources();
-		Test.stopTest();
-		System.assert(results.size() > 0);
-	}
+  }
 
   @IsTest
-	static void testGetTerritories() {
-		Test.startTest();
-		List<WorkMapController.ServiceTerritoryWrapper> results = WorkMapController.getTerritories();
-		Test.stopTest();
-		System.assert(results.size() > 0);
-	}
+  static void testConstructor() {
+    CalloutMock mock = new CalloutMock();
+    Test.setMock(HttpCalloutMock.class, mock);
+    Test.setCurrentPage(Page.WorkMap);
+    Test.startTest();
+    WorkMapController controller = new WorkMapController();
+    Test.stopTest();
+    System.assert(String.isNotEmpty(controller.googleJavascript));
+  }
 
-	@IsTest
-	static void testGetPolygons() {
-		Test.startTest();
-		List<FSL__Polygon__c> results = WorkMapController.getPolygons();
-		Test.stopTest();
-		System.assertNotEquals(null, results);
-	}
+  @IsTest
+  static void testGetWorkOrders() {
+    Test.startTest();
+    List<WorkMapController.WorkOrderWrapper> results = WorkMapController.getWorkOrders();
+    Test.stopTest();
+    System.assert(results.size() > 0);
+  }
+
+  @IsTest
+  static void testGetServiceAppointments() {
+    Test.startTest();
+    List<WorkMapController.ServiceAppointmentWrapper> results = WorkMapController.getServiceAppointments();
+    Test.stopTest();
+    System.assert(results.size() > 0);
+  }
+
+  @IsTest
+  static void testGetLocations() {
+    Test.startTest();
+    List<WorkMapController.LocationWrapper> results = WorkMapController.getLocations();
+    Test.stopTest();
+    System.assert(results.size() > 0);
+  }
+
+  @IsTest
+  static void testGetResources() {
+    Test.startTest();
+    List<WorkMapController.ServiceResourceWrapper> results = WorkMapController.getResources();
+    Test.stopTest();
+    System.assert(results.size() > 0);
+  }
+
+  @IsTest
+  static void testGetTerritories() {
+    Test.startTest();
+    List<WorkMapController.ServiceTerritoryWrapper> results = WorkMapController.getTerritories();
+    Test.stopTest();
+    System.assert(results.size() > 0);
+  }
+
+  @IsTest
+  static void testGetPolygons() {
+    Test.startTest();
+    List<FSL__Polygon__c> results = WorkMapController.getPolygons();
+    Test.stopTest();
+    System.assertNotEquals(null, results);
+  }
 
   @IsTest
   static void testGetWorkTypes() {
