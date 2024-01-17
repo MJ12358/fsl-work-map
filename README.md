@@ -10,7 +10,7 @@ Even choose your map style!
 
 You can even use this without the need for a "Dispatcher License".
 
-# Prerequisites
+## Prerequisites
 
 * Enable Field Service in your org
 * [Install the FSL managed package](https://fsl.secure.force.com/install)
@@ -19,32 +19,38 @@ You can even use this without the need for a "Dispatcher License".
 * Create a new "Work Map" metadata record called "Default" and add your [Google Api Key](https://developers.google.com/maps/documentation/javascript/get-api-key)
 * You _may_ have to adjust "Sharing Settings" to allow public read on "Work Type"
 
-# Deploy
+## Deploy
 
 <a href="https://githubsfdeploy.herokuapp.com?owner=MJ12358&repo=fsl-work-map&ref=main">
   <img alt="Deploy to Salesforce"
        src="https://raw.githubusercontent.com/afawcett/githubsfdeploy/master/deploy.png">
 </a>
 
-# Screenshots
+## Screenshots
+
 ![Screenshot](images/Capture.PNG)
 
 ## Filter by Status
+
 ![Screenshot_By_Status](images/Capture_By_Status.PNG)
 
 ## Filter by Territory
+
 ![Screenshot_By_Territory](images/Capture_By_Territory.PNG)
 
 ## Filter by Work Type
+
 ![Screenshot_By_WorkType](images/Capture_By_WorkType.PNG)
 
 ## Add Layers
+
 ![Screenshot_Layers](images/Capture_Layers.PNG)
 
 ## Style the map
+
 ![Screenshot_Style](images/Capture_Style.PNG)
 
-# Tests
+## Tests
 
 | Class | Percent | Lines |
 | ----- | ------- | ----- |
