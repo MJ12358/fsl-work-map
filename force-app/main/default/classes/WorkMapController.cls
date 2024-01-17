@@ -1,7 +1,7 @@
 /**
  * Created on Fri Apr 30 2021
  *
- * Copyright (c) 2021 Matt T. Jants
+ * Copyright (c) 2021 MJ12358
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification, 
@@ -28,8 +28,9 @@
 public with sharing class WorkMapController {
 
   public String googleJavascript { get; private set; }
-  private transient Work_Map_Settings__mdt setting;
-  private transient String url = 
+  
+  private static transient Work_Map_Settings__mdt setting;
+  private static transient String url = 
     'https://maps.googleapis.com/maps/api/js?key={0}&libraries=drawing,geometry,visualization';
   // these are the StatusCategory "values"
   private static transient List<String> restrictedStatuses = 
@@ -37,7 +38,7 @@ public with sharing class WorkMapController {
 
   public WorkMapController() {
     try {
-      this.setting = [
+      setting = [
         SELECT Google_Api_Key__c 
         FROM Work_Map_Settings__mdt 
         WHERE DeveloperName = 'Default' 
@@ -47,8 +48,8 @@ public with sharing class WorkMapController {
       throw new VisualforceException('No Work Map setting named "Default" found, please create it.');
     }
 
-    this.url = String.format(this.url, new List<String>{
-      this.setting.Google_Api_Key__c
+    url = String.format(url, new List<String>{
+      setting.Google_Api_Key__c
     });
 
     System.HttpRequest request = new System.HttpRequest();
